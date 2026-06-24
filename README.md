@@ -73,13 +73,37 @@ damit der Service Worker alles für offline ablegt.
 ## 🗂 Daten & Backup
 
 - Alle Projekte und Fotos liegen **ausschließlich lokal** auf dem Gerät
-  (IndexedDB). Es gibt keinen Server, keine Cloud‑Synchronisierung.
+  (IndexedDB). Es gibt **keinen Server und keinen Upload** – nichts wird in
+  eine Cloud hochgeladen.
+- Jedes Foto wird **sofort lokal gespeichert**, direkt nachdem du es
+  hinzufügst (kein „Senden"-Schritt nötig). Der dauerhafte Speicher wird beim
+  Start angefordert, damit iOS die Daten nicht automatisch löscht.
 - Über **⋯ → „Backup exportieren (JSON)"** lässt sich der gesamte Bestand als
   Datei sichern (z. B. nach „Dateien"/iCloud) und mit **„Backup importieren"**
   wiederherstellen oder auf ein anderes Gerät übertragen.
 - **Empfehlung:** regelmäßig ein Backup exportieren. Wird die App vom
   Home‑Bildschirm gelöscht oder der Safari‑Speicher geleert, sind sonst die
   lokalen Daten weg.
+
+> Möchtest du, dass Fotos/Projekte stattdessen **in eine Cloud hochgeladen**
+> und zwischen Geräten synchronisiert werden? Das ist möglich, erfordert aber
+> ein Backend (Server + Login + Speicher) und ist bewusst nicht Teil dieser
+> rein lokalen Version.
+
+---
+
+## 🔒 Zugangsschutz (Passwort)
+
+Beim Start verlangt die App ein **Passwort** (Sperrbildschirm). Standard ist
+**`Admin`**.
+
+- Änderbar über **⋯ → „Passwort ändern"** (aktuelles + neues Passwort).
+- **⋯ → „Jetzt sperren"** sperrt sofort wieder.
+- Das Passwort wird nur **als Hash lokal** gespeichert (nicht im Klartext).
+- Hinweis: Dies ist ein **Zugangsschutz** für die App auf diesem Gerät –
+  es ersetzt keine Verschlüsselung der gespeicherten Daten. Vergisst du das
+  Passwort, lässt es sich durch Leeren der Website‑Daten zurücksetzen (dabei
+  gehen aber die lokalen Projekte verloren – vorher Backup exportieren).
 
 ---
 

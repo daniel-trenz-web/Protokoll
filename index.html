@@ -297,6 +297,44 @@ input,textarea{font-family:inherit;font-size:16px}
     font-size:8.5px;color:#8b97a8;letter-spacing:.04em;border-top:1px solid #eef1f5;padding-top:1.6mm}
 }
 </style>
+<style>
+/* ===== Zugangsschutz: Sperrbildschirm ===== */
+.lock-screen{position:fixed;inset:0;z-index:200;background:linear-gradient(180deg,#22344b,#16202e);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  padding-top:max(24px,env(safe-area-inset-top));}
+.lock-screen.hidden{display:none}
+.lock-card{width:100%;max-width:340px;text-align:center;color:#fff}
+.lock-logo{width:76px;height:76px;border-radius:20px;margin:0 auto 18px;display:block;box-shadow:0 12px 34px rgba(0,0,0,.4)}
+.lock-card h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.lock-card p{margin:0 0 22px;color:#9fb0c7;font-size:14px}
+.lock-field{display:flex;flex-direction:column;gap:10px}
+.lock-field input{border:1px solid #33425a;background:#0f1722;color:#fff;border-radius:11px;
+  padding:14px;font-size:16px;text-align:center;outline:none;letter-spacing:.04em}
+.lock-field input:focus{border-color:#2b6cb0}
+.lock-field button{background:#2b6cb0;border:none;color:#fff;border-radius:11px;padding:14px;font-size:16px;font-weight:600}
+.lock-field button:active{background:#1a4e85}
+.lock-err{min-height:18px;margin-top:12px;color:#fda4a4;font-size:13px;font-weight:500}
+.lock-screen.shake .lock-card{animation:lkshake .4s}
+@keyframes lkshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* ===== Dialog: Passwort ändern ===== */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(15,23,35,.5);display:flex;align-items:center;
+  justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .16s}
+.modal.show{opacity:1;pointer-events:auto}
+.modal-card{width:100%;max-width:360px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,35,.32);
+  padding:20px;transform:translateY(8px);transition:transform .16s}
+.modal.show .modal-card{transform:none}
+.modal-card h3{margin:0 0 4px;font-size:18px;color:var(--ink)}
+.modal-card .m-sub{margin:0 0 8px;font-size:13px;color:var(--muted);line-height:1.45}
+.modal-card label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:12px 0 4px}
+.modal-card input{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:11px 12px;font-size:16px;outline:none;background:#fafbfc}
+.modal-card input:focus{border-color:var(--accent);background:#fff}
+.modal-err{min-height:16px;margin-top:10px;font-size:13px;color:var(--bad);font-weight:500}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions button{flex:1;border-radius:10px;padding:12px;font-size:15px;font-weight:600;border:1px solid var(--line-2);background:#fff;color:var(--ink)}
+.modal-actions button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.modal-actions button.primary:active{background:var(--accent-ink)}
+</style>
 </head>
 <body>
 
@@ -341,12 +379,47 @@ input,textarea{font-family:inherit;font-size:16px}
   <button data-act="export"><span class="ic">⭳</span> Backup exportieren (JSON)</button>
   <button data-act="import"><span class="ic">⭱</span> Backup importieren</button>
   <div class="sep"></div>
-  <div class="note">Alle Projekte und Fotos liegen ausschließlich lokal auf diesem Gerät. Exportiere regelmäßig ein Backup, z.&nbsp;B. in „Dateien" oder iCloud.</div>
+  <h3>Sicherheit</h3>
+  <button data-act="password"><span class="ic">🔑</span> Passwort ändern</button>
+  <button data-act="lock"><span class="ic">🔒</span> Jetzt sperren</button>
+  <div class="sep"></div>
+  <div class="note">Alle Projekte und Fotos liegen ausschließlich lokal auf diesem Gerät – nichts wird hochgeladen. Exportiere regelmäßig ein Backup, z.&nbsp;B. in „Dateien" oder iCloud.</div>
 </div>
 
 <div class="lightbox hidden" id="lightbox">
   <button class="lb-close" id="lbClose">✕</button>
   <img id="lbImg" alt="">
+</div>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <img class="lock-logo" src="icons/icon-192.png" alt="">
+    <h1>Wohnungsprotokoll</h1>
+    <p>Bitte Passwort eingeben</p>
+    <div class="lock-field">
+      <input type="password" id="lockInput" autocomplete="current-password" placeholder="Passwort" enterkeyhint="go">
+      <button id="lockBtn">Entsperren</button>
+    </div>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<div class="modal" id="pwModal">
+  <div class="modal-card">
+    <h3>Passwort ändern</h3>
+    <p class="m-sub">Schützt den Zugang zur App auf diesem Gerät. Standard ist „Admin".</p>
+    <label for="pwCurrent">Aktuelles Passwort</label>
+    <input type="password" id="pwCurrent" autocomplete="current-password" placeholder="Aktuelles Passwort">
+    <label for="pwNew">Neues Passwort</label>
+    <input type="password" id="pwNew" autocomplete="new-password" placeholder="Neues Passwort">
+    <label for="pwNew2">Neues Passwort wiederholen</label>
+    <input type="password" id="pwNew2" autocomplete="new-password" placeholder="Wiederholen" enterkeyhint="done">
+    <div class="modal-err" id="pwErr"></div>
+    <div class="modal-actions">
+      <button id="pwCancel">Abbrechen</button>
+      <button class="primary" id="pwSave">Speichern</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -379,10 +452,11 @@ const DB = {
   db:null,
   open(){
     return new Promise((res,rej)=>{
-      const r = indexedDB.open('wohnungsprotokoll',1);
+      const r = indexedDB.open('wohnungsprotokoll',2);
       r.onupgradeneeded = e=>{
         const db = e.target.result;
         if(!db.objectStoreNames.contains('projects')) db.createObjectStore('projects',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta',{keyPath:'key'});
       };
       r.onsuccess = e=>{ this.db = e.target.result; res(); };
       r.onerror = e=>rej(e.target.error);
@@ -392,6 +466,8 @@ const DB = {
   getAll(){ return new Promise((res,rej)=>{ const r=this.tx('readonly').getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); }); },
   put(p){ return new Promise((res,rej)=>{ const r=this.tx('readwrite').put(p); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); },
   del(id){ return new Promise((res,rej)=>{ const r=this.tx('readwrite').delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); },
+  getMeta(key){ return new Promise((res,rej)=>{ const r=this.db.transaction('meta','readonly').objectStore('meta').get(key); r.onsuccess=()=>res(r.result?r.result.value:undefined); r.onerror=()=>rej(r.error); }); },
+  setMeta(key,value){ return new Promise((res,rej)=>{ const r=this.db.transaction('meta','readwrite').objectStore('meta').put({key,value}); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); },
 };
 
 /* ============ State ============ */
@@ -1116,6 +1192,8 @@ document.getElementById('sheet').addEventListener('click',e=>{
   const act=b.dataset.act; closeSheet();
   if(act==='export') exportData();
   if(act==='import') document.getElementById('importInput').click();
+  if(act==='password') openPwModal();
+  if(act==='lock') lockNow();
 });
 
 /* ============ Sidebar mobil ============ */
@@ -1132,6 +1210,83 @@ let toastT=null;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); }
 function hideToast(){ document.getElementById('toast').classList.remove('show'); }
 
+/* ============ Zugangsschutz (Passwort) ============
+   Leichter Zugangs-Sperrbildschirm für dieses Gerät. Das Passwort wird nur
+   als Hash lokal gespeichert (IndexedDB), Standard ist "Admin". Hinweis: Dies
+   schützt den App-Zugang, ersetzt aber keine Verschlüsselung der Daten. */
+const DEFAULT_PW = 'Admin';
+async function hashPw(pw){
+  const data = new TextEncoder().encode('wp1::'+pw);
+  try{
+    if(self.crypto && crypto.subtle){
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      return 'sha256:'+[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(_){}
+  let h=2166136261; for(const b of data){ h^=b; h=Math.imul(h,16777619); }   // FNV-1a Fallback
+  return 'fnv:'+(h>>>0).toString(16);
+}
+async function storedPwHash(){
+  let h=null;
+  try{ h=await DB.getMeta('authHash'); }catch(_){}
+  if(!h) h=await hashPw(DEFAULT_PW);     // noch nie geändert -> Standardpasswort
+  return h;
+}
+async function verifyPw(pw){ return (await hashPw(pw)) === (await storedPwHash()); }
+async function changePw(newPw){ await DB.setMeta('authHash', await hashPw(newPw)); }
+
+function isUnlocked(){ try{ return sessionStorage.getItem('wp_unlocked')==='1'; }catch(_){ return false; } }
+function markUnlocked(){ try{ sessionStorage.setItem('wp_unlocked','1'); }catch(_){} }
+
+function setupLock(){
+  const ov=document.getElementById('lockScreen');
+  const inp=document.getElementById('lockInput');
+  const err=document.getElementById('lockErr');
+  async function attempt(){
+    if(await verifyPw(inp.value)){
+      markUnlocked(); inp.value=''; err.textContent=''; ov.classList.add('hidden');
+    }else{
+      err.textContent='Falsches Passwort'; inp.value=''; inp.focus();
+      ov.classList.add('shake'); setTimeout(()=>ov.classList.remove('shake'),420);
+    }
+  }
+  document.getElementById('lockBtn').addEventListener('click',attempt);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') attempt(); });
+}
+function openLock(){
+  const ov=document.getElementById('lockScreen');
+  ov.classList.remove('hidden');
+  document.getElementById('lockErr').textContent='';
+  const inp=document.getElementById('lockInput'); inp.value='';
+  setTimeout(()=>inp.focus(),60);
+}
+function lockNow(){ try{ sessionStorage.removeItem('wp_unlocked'); }catch(_){} closeSheet(); openLock(); }
+
+/* Dialog „Passwort ändern" */
+function openPwModal(){
+  closeSheet();
+  ['pwCurrent','pwNew','pwNew2'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('pwErr').textContent='';
+  document.getElementById('pwModal').classList.add('show');
+  setTimeout(()=>document.getElementById('pwCurrent').focus(),60);
+}
+function closePwModal(){ document.getElementById('pwModal').classList.remove('show'); }
+async function savePw(){
+  const cur=document.getElementById('pwCurrent').value;
+  const n1=document.getElementById('pwNew').value;
+  const n2=document.getElementById('pwNew2').value;
+  const err=document.getElementById('pwErr');
+  if(!(await verifyPw(cur))){ err.textContent='Aktuelles Passwort ist falsch.'; return; }
+  if(n1.length<3){ err.textContent='Neues Passwort muss mindestens 3 Zeichen haben.'; return; }
+  if(n1!==n2){ err.textContent='Die neuen Passwörter stimmen nicht überein.'; return; }
+  try{ await changePw(n1); }catch(e){ err.textContent='Konnte nicht gespeichert werden.'; return; }
+  closePwModal(); showToast('Passwort geändert'); setTimeout(hideToast,1600);
+}
+document.getElementById('pwCancel').addEventListener('click',closePwModal);
+document.getElementById('pwSave').addEventListener('click',savePw);
+document.getElementById('pwModal').addEventListener('click',e=>{ if(e.target.id==='pwModal') closePwModal(); });
+document.getElementById('pwNew2').addEventListener('keydown',e=>{ if(e.key==='Enter') savePw(); });
+
 /* ============ Init ============ */
 // Dauerhaften Speicher anfordern, damit iOS/Safari die lokal abgelegten
 // Projekte und Fotos nicht nach einigen Tagen automatisch löscht.
@@ -1144,6 +1299,7 @@ async function requestPersistentStorage(){
   }catch(_){}
 }
 async function init(){
+  setupLock();                         // Sperrbildschirm ist bis zur Entsperrung sichtbar
   await requestPersistentStorage();
   try{
     await DB.open();
@@ -1155,6 +1311,8 @@ async function init(){
     document.getElementById('content').innerHTML='<div class="empty"><h1>Speicher nicht verfügbar</h1><p>Der lokale Speicher konnte nicht geöffnet werden. Bitte öffne die Datei direkt in Safari (nicht im privaten Modus).</p></div>';
     return;
   }
+  if(isUnlocked()) document.getElementById('lockScreen').classList.add('hidden');
+  else openLock();                     // Passwort verlangen (Standard: Admin)
   renderSidebar();
   renderContent();
   setSaveState(false);
