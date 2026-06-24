@@ -1,0 +1,45 @@
+name: Deploy PWA to GitHub Pages
+
+# Veröffentlicht die statische App auf GitHub Pages (HTTPS) – nötig, damit
+# sich die PWA auf dem iPhone installieren lässt.
+#
+# Einmalig im Repo aktivieren:
+#   Settings → Pages → Build and deployment → Source: "GitHub Actions"
+
+on:
+  push:
+    branches: [main, claude/modest-gauss-6gwa66]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Gleichzeitige Deployments vermeiden
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Gesamtes Repo (statische Dateien) veröffentlichen
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
