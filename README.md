@@ -107,6 +107,20 @@ Beim Start verlangt die App ein **Passwort** (Sperrbildschirm). Standard ist
 
 ---
 
+## 💶 Schätzkosten & Kostenübersicht
+
+- An **jedem Stichpunkt** lässt sich ein Betrag als **Schätzkosten** eintragen
+  (Eingabe in Euro, deutsche Schreibweise wie `1.250,50`).
+- Unter den Gewerken zeigt die App live eine **Kostenübersicht**: Summe je
+  Gewerk und eine **Gesamtsumme**.
+- Im **PDF** erscheinen die Kosten am jeweiligen Stichpunkt, eine
+  Zwischensumme je Gewerk und am Ende eine eigene Seite **„Kostenübersicht"**
+  mit Aufstellung je Gewerk und Gesamtsumme.
+
+> Die Optik ist bewusst schlicht: einfarbig dunkelblau, ohne Symbole/Icons.
+
+---
+
 ## 🧪 Lokal testen (optional, am Rechner)
 
 Service Worker und Installierbarkeit brauchen `http(s)://` (nicht `file://`).

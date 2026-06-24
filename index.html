@@ -18,9 +18,9 @@
 :root{
   --ink:#16202e; --ink-2:#243246; --line:#e2e6ec; --line-2:#cfd6df;
   --bg:#eef1f5; --card:#ffffff; --muted:#62718a; --muted-2:#8b97a8;
-  --accent:#2b6cb0; --accent-ink:#1a4e85;
-  --ok:#16a34a; --bad:#dc2626; --todo:#d97706;
-  --ok-bg:#f0fbf3; --bad-bg:#fef2f2; --todo-bg:#fff8ef;
+  --accent:#1e3a5f; --accent-ink:#14283f;
+  --ok:#16202e; --bad:#16202e; --todo:#16202e;
+  --ok-bg:#f3f5f8; --bad-bg:#f3f5f8; --todo-bg:#f3f5f8;
   --radius:14px; --shadow:0 1px 2px rgba(20,30,45,.06),0 6px 20px rgba(20,30,45,.06);
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
@@ -47,11 +47,11 @@ input,textarea{font-family:inherit;font-size:16px}
 .brand .b-main{font-size:16px;line-height:1.1}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
 .save-state{font-size:12px;color:#9fb0c7;display:flex;align-items:center;gap:6px;padding-right:4px}
-.save-dot{width:7px;height:7px;border-radius:50%;background:#4ade80}
-.save-state.saving .save-dot{background:#fbbf24}
+.save-dot{width:7px;height:7px;border-radius:50%;background:#8fa0b6}
+.save-state.saving .save-dot{background:#cfd9e6}
 .icon-btn{
-  background:rgba(255,255,255,.08);border:none;color:#fff;width:40px;height:40px;
-  border-radius:10px;font-size:20px;display:grid;place-items:center;
+  background:rgba(255,255,255,.08);border:none;color:#fff;min-width:40px;height:40px;padding:0 13px;
+  border-radius:10px;font-size:14px;font-weight:600;display:grid;place-items:center;
 }
 .icon-btn:active{background:rgba(255,255,255,.18)}
 .menu-toggle{display:none}
@@ -128,8 +128,8 @@ input,textarea{font-family:inherit;font-size:16px}
 .btn:active{background:#f4f6f9}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.primary:active{background:var(--accent-ink)}
-.btn.danger{color:var(--bad);border-color:#f1c9c9}
-.btn.danger:active{background:var(--bad-bg)}
+.btn.danger{color:var(--ink);border-color:var(--line-2)}
+.btn.danger:active{background:#f4f6f9}
 .btn .ic{font-size:16px;line-height:1}
 
 /* Gewerk tabs */
@@ -177,9 +177,9 @@ input,textarea{font-family:inherit;font-size:16px}
 }
 .entry-text::placeholder{color:var(--line-2)}
 .entry-tools{display:flex;gap:6px;align-items:flex-start;padding-top:6px}
-.mini-btn{border:1px solid var(--line);background:#fff;border-radius:8px;width:36px;height:36px;display:grid;place-items:center;font-size:16px;color:var(--muted)}
+.mini-btn{border:1px solid var(--line);background:#fff;border-radius:8px;height:36px;padding:0 12px;display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--muted)}
 .mini-btn:active{background:#f1f3f6}
-.mini-btn.del:active{background:var(--bad-bg);color:var(--bad)}
+.mini-btn.del:active{background:#f1f3f6;color:var(--ink)}
 
 .photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .photo{position:relative;width:108px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#f4f6f9}
@@ -195,6 +195,24 @@ input,textarea{font-family:inherit;font-size:16px}
 }
 .add-btn:active{background:#f4f6f9;color:var(--ink)}
 .add-btn .ic{font-size:16px}
+
+/* Schätzkosten je Stichpunkt */
+.entry-cost{display:flex;align-items:center;gap:8px;margin-top:6px}
+.entry-cost .ec-label{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.entry-cost .ec-field{margin-left:auto;display:flex;align-items:center;gap:6px}
+.entry-cost .ec-field .eur{color:var(--muted);font-weight:600}
+.entry-cost input{width:120px;text-align:right;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fafbfc;color:var(--ink);outline:none;font-variant-numeric:tabular-nums}
+.entry-cost input:focus{border-color:var(--accent);background:#fff}
+
+/* Kostenübersicht */
+.cost-summary{margin-top:16px;padding:16px 18px}
+.cs-head{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
+.cs-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.cs-row .cs-name{color:var(--ink-2)}
+.cs-row .cs-val{font-weight:600;font-variant-numeric:tabular-nums}
+.cs-total{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:13px;border-top:2px solid var(--ink);font-size:17px;font-weight:800}
+.cs-total .cs-val{font-variant-numeric:tabular-nums}
+.cs-empty{color:var(--muted-2);font-size:14px;line-height:1.5}
 
 /* Settings sheet */
 .scrim{position:fixed;inset:0;background:rgba(15,23,35,.42);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
@@ -260,7 +278,15 @@ input,textarea{font-family:inherit;font-size:16px}
 .zf-ovt td.num{text-align:center;font-weight:700;width:26mm}
 .zf-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2mm;vertical-align:middle}
 .zf-pill{display:inline-block;min-width:7mm;text-align:center;padding:.5mm 2mm;border-radius:10px;font-size:10px;font-weight:700}
-.zf-pill.ok{background:#f0fbf3;color:#16a34a} .zf-pill.bad{background:#fef2f2;color:#dc2626} .zf-pill.todo{background:#fff8ef;color:#d97706} .zf-pill.zero{color:#cfd6df}
+.zf-pill.ok,.zf-pill.bad,.zf-pill.todo{background:#eef1f5;color:#16202e} .zf-pill.zero{background:transparent;color:#cfd6df}
+.zf-cost{margin-top:9mm}
+.zf-cost h2{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#62718a;font-weight:700;border-bottom:1px solid #16202e;padding-bottom:2mm;margin:0 0 3mm}
+.zf-cost table{width:100%;border-collapse:collapse}
+.zf-cost td{padding:2.4mm 2mm;font-size:11px;border-bottom:1px solid #eef1f5}
+.zf-cost td.val{text-align:right;font-weight:600}
+.zf-cost tr.total td{border-top:1.5px solid #16202e;border-bottom:none;font-weight:800;font-size:13px;padding-top:3mm}
+.zf-item .pcost{margin-left:auto;font-weight:700;white-space:nowrap;padding-left:4mm}
+.zf-sub{display:flex;justify-content:flex-end;gap:4mm;padding:1.5mm 0 0;font-size:11px;font-weight:700;border-top:1px solid #e2e6ec;margin-top:1.5mm}
 .zf-note{margin-top:8mm;font-size:11px;color:#243246}
 .zf-note .cn-lab{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8b97a8;font-weight:700;margin-bottom:1.5mm}
 
@@ -278,7 +304,7 @@ input,textarea{font-family:inherit;font-size:16px}
 .zf-shead .s-title{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
 .zf-item{display:flex;gap:2.5mm;padding:1.6mm 0 1.6mm 6.5mm;align-items:flex-start}
 .zf-item .pb{width:1.6mm;height:1.6mm;border-radius:50%;margin-top:1.9mm;flex:0 0 auto}
-.zf-item .pt{font-size:11.5px;line-height:1.4}
+.zf-item .pt{font-size:11.5px;line-height:1.4;flex:1 1 auto;min-width:0}
 .zf-prow{display:flex;flex-wrap:nowrap;gap:4mm;padding:1mm 0 2.5mm 6.5mm}
 .zf-photo{width:55mm;border:1px solid #e2e6ec;border-radius:2px;overflow:hidden;flex:0 0 auto}
 .zf-photo img{display:block;width:100%;height:41mm;object-fit:cover}
@@ -340,13 +366,8 @@ input,textarea{font-family:inherit;font-size:16px}
 
 <div id="app">
   <header class="topbar">
-    <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Projekte">☰</button>
+    <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Projekte">Projekte</button>
     <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="4" y="3.5" width="16" height="17" rx="2.4" fill="#2b6cb0"/>
-        <rect x="8.5" y="2" width="7" height="3.4" rx="1.4" fill="#9fb0c7"/>
-        <path d="M8 12.2l2.4 2.4L16 9.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
       <div>
         <div class="b-sub">Abnahme · Zustand</div>
         <div class="b-main">Wohnungsprotokoll</div>
@@ -354,7 +375,7 @@ input,textarea{font-family:inherit;font-size:16px}
     </div>
     <div class="topbar-right">
       <span class="save-state" id="saveState"><span class="save-dot"></span><span id="saveLabel">Gesichert</span></span>
-      <button class="icon-btn" id="settingsBtn" aria-label="Menü">⋯</button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Menü">Menü</button>
     </div>
   </header>
 
@@ -362,7 +383,7 @@ input,textarea{font-family:inherit;font-size:16px}
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
         <h2>Projekte</h2>
-        <button class="btn-new" id="newProjectBtn">＋ Neu</button>
+        <button class="btn-new" id="newProjectBtn">Neu</button>
       </div>
       <div class="project-list" id="projectList"></div>
     </aside>
@@ -376,12 +397,12 @@ input,textarea{font-family:inherit;font-size:16px}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
   <h3>Daten &amp; Sicherung</h3>
-  <button data-act="export"><span class="ic">⭳</span> Backup exportieren (JSON)</button>
-  <button data-act="import"><span class="ic">⭱</span> Backup importieren</button>
+  <button data-act="export">Backup exportieren (JSON)</button>
+  <button data-act="import">Backup importieren</button>
   <div class="sep"></div>
   <h3>Sicherheit</h3>
-  <button data-act="password"><span class="ic">🔑</span> Passwort ändern</button>
-  <button data-act="lock"><span class="ic">🔒</span> Jetzt sperren</button>
+  <button data-act="password">Passwort ändern</button>
+  <button data-act="lock">Jetzt sperren</button>
   <div class="sep"></div>
   <div class="note">Alle Projekte und Fotos liegen ausschließlich lokal auf diesem Gerät – nichts wird hochgeladen. Exportiere regelmäßig ein Backup, z.&nbsp;B. in „Dateien" oder iCloud.</div>
 </div>
@@ -393,7 +414,6 @@ input,textarea{font-family:inherit;font-size:16px}
 
 <div class="lock-screen" id="lockScreen">
   <div class="lock-card">
-    <img class="lock-logo" src="icons/icon-192.png" alt="">
     <h1>Wohnungsprotokoll</h1>
     <p>Bitte Passwort eingeben</p>
     <div class="lock-field">
@@ -433,18 +453,18 @@ input,textarea{font-family:inherit;font-size:16px}
 
 /* ============ Konstanten ============ */
 const GEWERKE = [
-  {key:'maler',     label:'Maler',     color:'#7c3aed'},
-  {key:'boden',     label:'Boden',     color:'#c2410c'},
-  {key:'fliesen',   label:'Fliesen',   color:'#0e7490'},
-  {key:'sanitaer',  label:'Sanitär',   color:'#2563eb'},
-  {key:'elektro',   label:'Elektro',   color:'#d97706'},
-  {key:'tischler',  label:'Tischler',  color:'#4d7c0f'},
-  {key:'reinigung', label:'Reinigung', color:'#0d9488'},
+  {key:'maler',     label:'Maler',     color:'#1e3a5f'},
+  {key:'boden',     label:'Boden',     color:'#1e3a5f'},
+  {key:'fliesen',   label:'Fliesen',   color:'#1e3a5f'},
+  {key:'sanitaer',  label:'Sanitär',   color:'#1e3a5f'},
+  {key:'elektro',   label:'Elektro',   color:'#1e3a5f'},
+  {key:'tischler',  label:'Tischler',  color:'#1e3a5f'},
+  {key:'reinigung', label:'Reinigung', color:'#1e3a5f'},
 ];
 const SECTIONS = [
-  {key:'ausgefuehrt', label:'Arbeiten augenscheinlich ausgeführt',   short:'Ausgeführt', tone:'ok',   color:'#16a34a', mark:'✓'},
-  {key:'maengel',     label:'Mängel vorhanden',                       short:'Mängel',     tone:'bad',  color:'#dc2626', mark:'!'},
-  {key:'offen',       label:'Arbeiten müssen noch ausgeführt werden', short:'Offen',      tone:'todo', color:'#d97706', mark:'→'},
+  {key:'ausgefuehrt', label:'Arbeiten augenscheinlich ausgeführt',   short:'Ausgeführt', tone:'ok',   color:'#1e3a5f', mark:''},
+  {key:'maengel',     label:'Mängel vorhanden',                       short:'Mängel',     tone:'bad',  color:'#1e3a5f', mark:''},
+  {key:'offen',       label:'Arbeiten müssen noch ausgeführt werden', short:'Offen',      tone:'todo', color:'#1e3a5f', mark:''},
 ];
 
 /* ============ IndexedDB ============ */
@@ -493,7 +513,10 @@ function ensureShape(p){
   if(!p.gewerke) p.gewerke={};
   GEWERKE.forEach(w=>{
     if(!p.gewerke[w.key]) p.gewerke[w.key]={};
-    SECTIONS.forEach(s=>{ if(!Array.isArray(p.gewerke[w.key][s.key])) p.gewerke[w.key][s.key]=[]; });
+    SECTIONS.forEach(s=>{
+      if(!Array.isArray(p.gewerke[w.key][s.key])) p.gewerke[w.key][s.key]=[];
+      p.gewerke[w.key][s.key].forEach(e=>{ e.cost=Number(e.cost)||0; if(!Array.isArray(e.photos)) e.photos=[]; });
+    });
   });
   ['name','strasse','plzort','wohnungsnr','etage','datum','bearbeiter','auftraggeber','notiz']
     .forEach(k=>{ if(p[k]==null) p[k]=''; });
@@ -527,6 +550,22 @@ function gewerkCounts(p,gkey){
   return c;
 }
 function gewerkHasContent(p,gkey){ const c=gewerkCounts(p,gkey); return SECTIONS.some(s=>c[s.key]>0); }
+
+/* ============ Hilfen: Schätzkosten ============ */
+function parseCost(str){
+  if(typeof str==='number') return str>=0?str:0;
+  if(!str) return 0;
+  let s=String(str).replace(/[^\d.,]/g,'').trim();
+  if(s.indexOf(',')>-1){ s=s.replace(/\./g,'').replace(',','.'); }   // Komma = Dezimaltrenner (1.234,56)
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)){ s=s.replace(/\./g,''); }   // reine Tausenderpunkte (1.250)
+  // sonst bleibt '.' als Dezimalpunkt erhalten (1250.50)
+  const n=parseFloat(s);
+  return isFinite(n)&&n>0 ? n : 0;
+}
+function fmtEUR(n){ return (Number(n)||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'}); }
+function fmtNum(n){ return (Number(n)||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function gewerkCost(p,gkey){ let s=0; SECTIONS.forEach(sec=>{ (p.gewerke[gkey][sec.key]||[]).forEach(e=>{ s+=Number(e.cost)||0; }); }); return s; }
+function projectCost(p){ let s=0; GEWERKE.forEach(w=>{ s+=gewerkCost(p,w.key); }); return s; }
 
 /* ============ Foto-Komprimierung ============
    Skaliert das Bild herunter und legt es als JPEG-DataURL ab.
@@ -608,10 +647,9 @@ function renderContent(){
   const p=current();
   if(!p){
     c.innerHTML=`<div class="empty">
-      <div class="e-mark"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect x="4" y="3.5" width="16" height="17" rx="2.4" fill="#cfd6df"/><rect x="8.5" y="2" width="7" height="3.4" rx="1.4" fill="#aab4c2"/><path d="M8 12.2l2.4 2.4L16 9.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <h1>Wohnung anlegen</h1>
-      <p>Lege ein Projekt für eine Wohnung an. Pro Gewerk dokumentierst du ausgeführte Arbeiten, Mängel und offene Punkte – mit Fotos direkt am Stichpunkt. Am Ende erzeugst du ein A4-PDF.</p>
-      <button id="emptyNew">＋ Neues Projekt</button>
+      <p>Lege ein Projekt für eine Wohnung an. Pro Gewerk dokumentierst du ausgeführte Arbeiten, Mängel und offene Punkte – mit Fotos und Schätzkosten direkt am Stichpunkt. Am Ende erzeugst du ein A4-PDF mit Kostenaufstellung.</p>
+      <button id="emptyNew">Neues Projekt</button>
     </div>`;
     document.getElementById('emptyNew').addEventListener('click',createProject);
     return;
@@ -620,8 +658,9 @@ function renderContent(){
     <section class="proj-header card" id="projHeader"></section>
     <nav class="gewerk-tabs" id="gewerkTabs"></nav>
     <section class="gewerk-panel" id="gewerkPanel"></section>
+    <section class="cost-summary card" id="costSummary"></section>
   </div>`;
-  renderHeader(); renderTabs(); renderPanel();
+  renderHeader(); renderTabs(); renderPanel(); renderCostSummary();
   document.getElementById('content').scrollTop=0;
 }
 
@@ -651,10 +690,10 @@ function renderHeader(){
       <div class="field full"><label>Allgemeine Notizen</label><textarea id="f-notiz" rows="2" placeholder="Zugang, Schlüssel, Besonderheiten …">${esc(p.notiz)}</textarea></div>
     </div>
     <div class="ph-actions">
-      <button class="btn primary" id="btnPdf"><span class="ic">⎙</span> PDF erstellen</button>
-      <button class="btn" id="btnPrint"><span class="ic">🖨</span> Drucken</button>
-      <button class="btn" id="btnDup"><span class="ic">⧉</span> Duplizieren</button>
-      <button class="btn danger" id="btnDel" style="margin-left:auto"><span class="ic">🗑</span> Löschen</button>
+      <button class="btn primary" id="btnPdf">PDF erstellen</button>
+      <button class="btn" id="btnPrint">Drucken</button>
+      <button class="btn" id="btnDup">Duplizieren</button>
+      <button class="btn danger" id="btnDel" style="margin-left:auto">Löschen</button>
     </div>`;
   bindField(document.getElementById('f-name'),'name');
   bindField(document.getElementById('f-strasse'),'strasse');
@@ -678,8 +717,8 @@ function renderTabs(){
     const c=gewerkCounts(p,w.key);
     const active=w.key===state.currentGewerk;
     return `<button class="gtab ${active?'active':''} ${c.maengel?'has-maengel':''}" data-g="${w.key}"
-      style="${active?`background:${w.color}`:''}">
-      <span class="dot" style="background:${w.color}"></span>${w.label}
+      style="${active?`background:${w.color};border-color:${w.color}`:''}">
+      ${w.label}
       <span class="count">${c.maengel}</span>
     </button>`;
   }).join('');
@@ -708,15 +747,14 @@ function renderPanel(){
     const entries=g[s.key];
     html+=`<div class="section ${s.tone}">
       <div class="section-head">
-        <span class="s-ic">${s.mark}</span>
         <span class="s-title">${s.label}</span>
         <span class="s-count">${counts[s.key]||0}</span>
       </div>
       <div class="section-body">
         <div class="entries" data-sec="${s.key}">${entries.map(e=>entryHTML(e,s)).join('')}</div>
         <div class="section-actions">
-          <button class="add-btn" data-add-text="${s.key}"><span class="ic">＋</span> Stichpunkt</button>
-          <button class="add-btn" data-add-photo="${s.key}"><span class="ic">📷</span> Foto</button>
+          <button class="add-btn" data-add-text="${s.key}">Stichpunkt hinzufügen</button>
+          <button class="add-btn" data-add-photo="${s.key}">Foto hinzufügen</button>
         </div>
       </div>
     </div>`;
@@ -740,6 +778,15 @@ function renderPanel(){
         if(ph){ ph.caption=cap.value; scheduleSave(); }
       });
     });
+    const ci=el.querySelector('.entry-cost-input');
+    if(ci){
+      ci.addEventListener('input',()=>{
+        const e=findEntry(sec,eid); if(e){ e.cost=parseCost(ci.value); renderCostSummary(); scheduleSave(); }
+      });
+      ci.addEventListener('blur',()=>{
+        const e=findEntry(sec,eid); if(e){ ci.value = e.cost ? fmtNum(e.cost) : ''; }
+      });
+    }
     el.querySelectorAll('.photo img').forEach(im=>im.addEventListener('click',()=>openLightbox(im.src)));
     el.querySelectorAll('.p-del').forEach(btn=>btn.addEventListener('click',()=>{
       const e=findEntry(sec,eid); if(!e) return;
@@ -750,7 +797,7 @@ function renderPanel(){
     if(addP) addP.addEventListener('click',()=>triggerPhoto(sec,eid));
     const del=el.querySelector('.entry-del');
     if(del) del.addEventListener('click',()=>{
-      removeEntry(sec,eid); renderPanel(); renderTabs(); renderSidebar(); saveNow();
+      removeEntry(sec,eid); renderPanel(); renderTabs(); renderSidebar(); renderCostSummary(); saveNow();
     });
   });
 
@@ -767,6 +814,18 @@ function renderPanel(){
   }));
 }
 
+function renderCostSummary(){
+  const el=document.getElementById('costSummary'); if(!el) return;
+  const p=current(); if(!p){ el.innerHTML=''; return; }
+  const rows=GEWERKE.filter(w=>gewerkHasContent(p,w.key)||gewerkCost(p,w.key)>0)
+    .map(w=>`<div class="cs-row"><span class="cs-name">${esc(w.label)}</span><span class="cs-val">${fmtEUR(gewerkCost(p,w.key))}</span></div>`)
+    .join('');
+  const total=projectCost(p);
+  el.innerHTML=`<div class="cs-head">Kostenübersicht (Schätzung)</div>
+    ${rows||'<div class="cs-empty">Noch keine Einträge. Trage Schätzkosten an den einzelnen Stichpunkten ein – die Summen erscheinen hier automatisch.</div>'}
+    <div class="cs-total"><span>Gesamtsumme</span><span class="cs-val">${fmtEUR(total)}</span></div>`;
+}
+
 function entryHTML(e,s){
   const photos=(e.photos||[]).map(ph=>`
     <div class="photo">
@@ -778,11 +837,15 @@ function entryHTML(e,s){
     <span class="entry-bullet"></span>
     <div class="entry-main">
       <textarea class="entry-text" rows="1" placeholder="Stichpunkt eingeben…">${esc(e.text||'')}</textarea>
+      <div class="entry-cost">
+        <span class="ec-label">Schätzkosten</span>
+        <div class="ec-field"><span class="eur">€</span><input class="entry-cost-input" inputmode="decimal" placeholder="0,00" value="${e.cost?esc(fmtNum(e.cost)):''}"></div>
+      </div>
       ${(e.photos&&e.photos.length)?`<div class="photos">${photos}</div>`:''}
     </div>
     <div class="entry-tools">
-      <button class="mini-btn entry-addphoto" aria-label="Foto hinzufügen">📷</button>
-      <button class="mini-btn del entry-del" aria-label="Stichpunkt löschen">🗑</button>
+      <button class="mini-btn entry-addphoto" aria-label="Foto hinzufügen">Foto</button>
+      <button class="mini-btn del entry-del" aria-label="Stichpunkt löschen">Löschen</button>
     </div>
   </div>`;
 }
@@ -790,7 +853,7 @@ function entryHTML(e,s){
 /* ============ Entry-Operationen ============ */
 function curSection(sec){ return current().gewerke[state.currentGewerk][sec]; }
 function findEntry(sec,eid){ return curSection(sec).find(e=>e.id===eid); }
-function addEntry(sec,text){ const e={id:uid(),text:text||'',photos:[]}; curSection(sec).push(e); return e.id; }
+function addEntry(sec,text){ const e={id:uid(),text:text||'',photos:[],cost:0}; curSection(sec).push(e); return e.id; }
 function removeEntry(sec,eid){ const arr=curSection(sec); const i=arr.findIndex(e=>e.id===eid); if(i>=0) arr.splice(i,1); }
 
 /* ============ Foto-Aufnahme ============ */
@@ -878,6 +941,8 @@ function buildPrint(p){
       return `<tr><td><span class="zf-dot" style="background:${w.color}"></span>${esc(w.label)}</td>
         <td class="num">${pill(c.ausgefuehrt,'ok')}</td><td class="num">${pill(c.maengel,'bad')}</td><td class="num">${pill(c.offen,'todo')}</td></tr>`;
     }).join('');
+    const costGewerke=GEWERKE.filter(w=>gewerkHasContent(p,w.key)||gewerkCost(p,w.key)>0);
+    const costRows=costGewerke.map(w=>`<tr><td>${esc(w.label)}</td><td class="val">${esc(fmtEUR(gewerkCost(p,w.key)))}</td></tr>`).join('');
     return mk('div','zf-cover',`
       <div class="c-eyebrow">Zustandsfeststellung</div>
       <h1>${esc(p.name)||'Wohnung'}</h1>
@@ -887,6 +952,8 @@ function buildPrint(p){
       <div class="zf-ov"><h2>Übersicht der Gewerke</h2>
         <table class="zf-ovt"><thead><tr><th>Gewerk</th><th class="num">Ausgeführt</th><th class="num">Mängel</th><th class="num">Offen</th></tr></thead>
         <tbody>${ovRows}</tbody></table></div>
+      ${costGewerke.length?`<div class="zf-cost"><h2>Kostenübersicht (Schätzung)</h2>
+        <table>${costRows}<tr class="total"><td>Gesamtsumme</td><td class="val">${esc(fmtEUR(projectCost(p)))}</td></tr></table></div>`:''}
       ${p.notiz?`<div class="zf-note"><div class="cn-lab">Allgemeine Notizen</div>${esc(p.notiz).replace(/\n/g,'<br>')}</div>`:''}`);
   }
 
@@ -898,8 +965,11 @@ function buildPrint(p){
     `<span class="g-bar" style="background:${w.color}"></span><span class="g-name">${esc(w.label)}</span><span class="g-cont">Fortsetzung</span>`);
   const buildSHead=s=>mk('div','zf-shead',
     `<span class="s-tag" style="background:${s.color}"></span><span class="s-title" style="color:${s.color}">${esc(s.label)}</span>`);
-  const buildItem=(s,text)=>mk('div','zf-item',
-    `<span class="pb" style="background:${s.color}"></span><span class="pt">${esc(text).replace(/\n/g,'<br>')}</span>`);
+  const buildItem=(s,e)=>{
+    const cost=Number(e.cost)||0;
+    return mk('div','zf-item',
+      `<span class="pb" style="background:${s.color}"></span><span class="pt">${esc(e.text).replace(/\n/g,'<br>')}</span>${cost>0?`<span class="pcost">${esc(fmtEUR(cost))}</span>`:''}`);
+  };
   const buildPRow=photos=>mk('div','zf-prow',photos.map(ph=>
     `<div class="zf-photo"><img src="${ph.data}">${ph.caption?`<div class="pcap">${esc(ph.caption)}</div>`:''}</div>`).join(''));
 
@@ -929,7 +999,7 @@ function buildPrint(p){
       entries.forEach(e=>{
         const hasText=e.text&&e.text.trim();
         const photos=e.photos||[];
-        if(hasText) place(buildItem(s,e.text), photos.length?44*pxPerMm:0);
+        if(hasText) place(buildItem(s,e), photos.length?44*pxPerMm:0);
         for(let i=0;i<photos.length;i+=3) place(buildPRow(photos.slice(i,i+3)));
       });
     });
@@ -1071,9 +1141,9 @@ async function buildPdfDoc(p){
     setFill(hexRGB(w.color)); doc.circle(mL+1.6, y-1.1, 1.4, 'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setText(ink); doc.text(w.label, mL+5, y);
     const num=(val,col)=>{ doc.setFont('helvetica','bold'); doc.setFontSize(10.5); setText(val?hexRGB(col):hexRGB('#cfd6df')); };
-    num(cc.ausgefuehrt,'#16a34a'); doc.text(String(cc.ausgefuehrt||'–'), cN[0], y, {align:'right'});
-    num(cc.maengel,'#dc2626');    doc.text(String(cc.maengel||'–'),    cN[1], y, {align:'right'});
-    num(cc.offen,'#d97706');      doc.text(String(cc.offen||'–'),      cN[2], y, {align:'right'});
+    num(cc.ausgefuehrt,'#16202e'); doc.text(String(cc.ausgefuehrt||'–'), cN[0], y, {align:'right'});
+    num(cc.maengel,'#16202e');    doc.text(String(cc.maengel||'–'),    cN[1], y, {align:'right'});
+    num(cc.offen,'#16202e');      doc.text(String(cc.offen||'–'),      cN[2], y, {align:'right'});
     y+=3; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=5;
   });
   if(p.notiz && p.notiz.trim()){
@@ -1094,30 +1164,67 @@ async function buildPdfDoc(p){
     y+=9; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=7;
 
     for(const s of SECTIONS){
-      const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||((e.photos||[]).length));
+      const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||((e.photos||[]).length)||(Number(e.cost)>0));
       if(!entries.length) continue;
       need(16,true);
       setFill(hexRGB(s.color)); doc.rect(mL, y-3.2, 3.6, 3.6, 'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(10); setText(hexRGB(s.color));
       doc.text(s.label.toUpperCase(), mL+6, y); y+=6;
       for(const e of entries){
+        const cost=Number(e.cost)||0;
+        const photos=e.photos||[];
         if(e.text && e.text.trim()){
           doc.setFont('helvetica','normal'); doc.setFontSize(11); setText(ink);
           const lines=doc.splitTextToSize(e.text.trim(), contentW-7);
           const blockH=lines.length*lh(11);
-          need(blockH+((e.photos&&e.photos.length)?6:2), true);
+          need(blockH+(cost>0?5:0)+(photos.length?6:2), true);
           setFill(hexRGB(s.color)); doc.circle(mL+1.6, y-1.4, 0.9, 'F');
-          doc.text(lines, mL+6, y); y+=blockH+2;
+          doc.text(lines, mL+6, y); y+=blockH;
         }
-        const photos=e.photos||[];
+        if(cost>0){
+          need(5,true);
+          doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setText(ink);
+          doc.text('Schätzkosten: '+fmtEUR(cost), W-mR, y+1, {align:'right'});
+          y+=5;
+        } else if(e.text && e.text.trim()){ y+=2; }
         for(let i=0;i<photos.length;i+=3){ await placePhotoRow(photos.slice(i,i+3), mL+6, contentW-6); }
       }
       y+=3;
+    }
+    const gc=gewerkCost(p,w.key);
+    if(gc>0){
+      need(9,true);
+      setDraw(ink); doc.setLineWidth(0.4); doc.line(W-mR-72, y, W-mR, y); y+=4.5;
+      doc.setFont('helvetica','bold'); doc.setFontSize(10.5); setText(ink);
+      doc.text('Zwischensumme '+w.label+': '+fmtEUR(gc), W-mR, y, {align:'right'}); y+=4;
     }
   }
   if(!gw.length){
     doc.addPage(); y=mT+4;
     doc.setFont('helvetica','bold'); doc.setFontSize(11); setText(muted2); doc.text('Keine Gewerk-Einträge erfasst', mL, y);
+  }
+
+  /* ---------- Kostenübersicht (Aufstellung je Gewerk + Gesamtsumme) ---------- */
+  if(gw.length){
+    const rows=GEWERKE.filter(w=>gewerkHasContent(p,w.key)||gewerkCost(p,w.key)>0);
+    doc.addPage(); y=mT;
+    doc.setFont('helvetica','bold'); doc.setFontSize(17); setText(ink);
+    doc.text('Kostenübersicht', mL, y+5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setText(muted2);
+    doc.text('Schätzung', W-mR, y+4.5, {align:'right'});
+    y+=9; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=8;
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setText(muted2);
+    doc.text('GEWERK', mL, y); doc.text('SCHÄTZKOSTEN', W-mR, y, {align:'right'});
+    y+=2; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=6;
+    rows.forEach(w=>{
+      need(8,false);
+      doc.setFont('helvetica','normal'); doc.setFontSize(11.5); setText(ink); doc.text(w.label, mL, y);
+      doc.setFont('helvetica','bold'); doc.text(fmtEUR(gewerkCost(p,w.key)), W-mR, y, {align:'right'});
+      y+=3.5; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=5;
+    });
+    y+=3; setDraw(ink); doc.setLineWidth(0.8); doc.line(mL,y,W-mR,y); y+=8;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); setText(ink);
+    doc.text('Gesamtsumme', mL, y); doc.text(fmtEUR(projectCost(p)), W-mR, y, {align:'right'});
   }
 
   /* ---------- Fußzeile + Seitenzahlen ---------- */
