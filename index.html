@@ -1001,10 +1001,13 @@ function buildPrint(p){
   }
 
   const gw=GEWERKE.filter(w=>gewerkHasContent(p,w.key));
-  gw.forEach(w=>{
+  if(gw.length) newPage(false);              // Gewerke beginnen nach dem Deckblatt
+  gw.forEach((w,gi)=>{
     curGewerk=w;
-    newPage(false);                          // jedes Gewerk startet auf neuer Seite
-    const gh=buildGHead(w); cur.blocks.push(gh); used+=mh(gh);
+    if(gi>0 && used>0){ const sp=mk('div'); sp.style.height='7mm'; cur.blocks.push(sp); used+=mh(sp); }   // Abstand zwischen Gewerken
+    const gh=buildGHead(w); const ghH=mh(gh);
+    if(cur && cur.blocks.length && used+ghH+24*pxPerMm>budget){ newPage(false); }   // Umbruch nur, wenn Kopf nicht mehr passt
+    cur.blocks.push(gh); used+=ghH;
     SECTIONS.forEach(s=>{
       const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||((e.photos||[]).length));
       if(!entries.length) return;
@@ -1161,10 +1164,13 @@ async function buildPdfDoc(p){
     doc.splitTextToSize(p.notiz.trim(), contentW).forEach(t=>{ need(6,false); doc.text(t, mL, y); y+=lh(10.5); });
   }
 
-  /* ---------- Gewerk-Seiten ---------- */
+  /* ---------- Gewerke (fortlaufend; Umbruch nur, wenn nötig) ---------- */
   const gw=GEWERKE.filter(w=>gewerkHasContent(p,w.key));
+  if(gw.length){ doc.addPage(); y=mT; }     // Gewerke starten nach dem Deckblatt
   for(const w of gw){
-    curGewerk=w; doc.addPage(); y=mT;
+    curGewerk=w;
+    if(y>mT+0.1) y+=7;                       // Abstand zwischen Gewerken
+    need(30,false);                          // Gewerk-Kopf nicht allein ans Seitenende
     setFill(hexRGB(w.color)); doc.roundedRect(mL, y, 6, 6, 1, 1, 'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(17); setText(ink); doc.text(w.label, mL+9, y+5);
     const objLine=(p.name||'')+(p.wohnungsnr?'  ·  ME '+p.wohnungsnr:'');
