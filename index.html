@@ -230,6 +230,8 @@ input,textarea{font-family:inherit;font-size:16px}
 .sheet button.danger{color:var(--bad)}
 .sheet .sep{height:1px;background:var(--line);margin:4px 0}
 .sheet .note{padding:10px 16px 14px;font-size:12px;color:var(--muted-2);line-height:1.5}
+.store-bar{height:8px;border-radius:6px;background:var(--line);overflow:hidden;margin:6px 16px 2px}
+.store-bar span{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
 
 /* Lightbox */
 .lightbox{position:fixed;inset:0;background:rgba(8,12,18,.92);z-index:60;display:grid;place-items:center;padding:24px}
@@ -403,6 +405,10 @@ input,textarea{font-family:inherit;font-size:16px}
   <h3>Sicherheit</h3>
   <button data-act="password">Passwort ändern</button>
   <button data-act="lock">Jetzt sperren</button>
+  <div class="sep"></div>
+  <h3>Speicher</h3>
+  <div class="store-bar"><span id="storageBar"></span></div>
+  <div class="note" id="storageInfo">wird ermittelt …</div>
   <div class="sep"></div>
   <div class="note">Alle Projekte und Fotos liegen ausschließlich lokal auf diesem Gerät – nichts wird hochgeladen. Exportiere regelmäßig ein Backup, z.&nbsp;B. in „Dateien" oder iCloud.</div>
 </div>
@@ -1290,7 +1296,33 @@ document.getElementById('importInput').addEventListener('change',async e=>{
 });
 
 /* ============ Sheet / Menü ============ */
-function openSheet(){ document.getElementById('sheet').classList.add('show'); document.getElementById('scrim').classList.add('show'); }
+function fmtBytes(b){
+  if(b==null||isNaN(b)) return '–';
+  if(b>=1073741824) return (b/1073741824).toFixed(2).replace('.',',')+' GB';
+  if(b>=1048576) return (b/1048576).toFixed(1).replace('.',',')+' MB';
+  return Math.round(b/1024)+' KB';
+}
+async function updateStorageInfo(){
+  const info=document.getElementById('storageInfo'); const bar=document.getElementById('storageBar');
+  if(!info) return;
+  let usage=null, quota=null;
+  try{ if(navigator.storage && navigator.storage.estimate){ const est=await navigator.storage.estimate(); usage=est.usage; quota=est.quota; } }catch(_){}
+  let photos=0;
+  state.projects.forEach(p=>GEWERKE.forEach(w=>SECTIONS.forEach(s=>(p.gewerke[w.key][s.key]||[]).forEach(e=>{ photos+=(e.photos||[]).length; }))));
+  const counts=`${state.projects.length} Projekt${state.projects.length===1?'':'e'}, ${photos} Foto${photos===1?'':'s'} gespeichert.`;
+  if(quota){
+    const free=Math.max(0,quota-(usage||0));
+    const pct=Math.min(100, Math.round((usage||0)/quota*100));
+    if(bar) bar.style.width=Math.max(2,pct)+'%';
+    const approx=Math.floor(free/(350*1024));   // ~350 KB je Foto (grobe Annahme)
+    info.innerHTML=`Belegt: <b>${fmtBytes(usage)}</b> von rund <b>${fmtBytes(quota)}</b> (${pct}%).<br>`+
+      `Frei: <b>${fmtBytes(free)}</b> – Platz für grob noch <b>${approx.toLocaleString('de-DE')}</b> Fotos.<br>${counts}`;
+  } else {
+    if(bar) bar.style.width='0';
+    info.innerHTML=`${counts}<br>Der genaue freie Speicher lässt sich auf diesem Gerät nicht abfragen. iOS gibt der App üblicherweise einen Anteil des freien iPhone-Speichers (meist mehrere GB).`;
+  }
+}
+function openSheet(){ document.getElementById('sheet').classList.add('show'); document.getElementById('scrim').classList.add('show'); updateStorageInfo(); }
 function closeSheet(){ document.getElementById('sheet').classList.remove('show'); document.getElementById('scrim').classList.remove('show'); }
 document.getElementById('settingsBtn').addEventListener('click',openSheet);
 document.getElementById('scrim').addEventListener('click',()=>{ closeSheet(); closeSidebar(); });
