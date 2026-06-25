@@ -398,6 +398,12 @@ input,textarea{font-family:inherit;font-size:16px}
 
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet">
+  <div id="installSection">
+    <h3>App installieren</h3>
+    <button data-act="install" id="installBtn" class="hidden">App installieren</button>
+    <div class="note" id="installHint"></div>
+    <div class="sep"></div>
+  </div>
   <h3>Daten &amp; Sicherung</h3>
   <button data-act="export">Backup exportieren (JSON)</button>
   <button data-act="import">Backup importieren</button>
@@ -1290,6 +1296,33 @@ document.getElementById('importInput').addEventListener('change',async e=>{
 });
 
 /* ============ Sheet / Menü ============ */
+/* App-Installation (PWA) – funktioniert auf Android/Samsung mit nativem Prompt,
+   auf iPhone über „Zum Home-Bildschirm". */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredPrompt=e; updateInstallUI(); });
+window.addEventListener('appinstalled',()=>{ deferredPrompt=null; updateInstallUI(); showToast('App installiert'); setTimeout(hideToast,1600); });
+function isStandalone(){ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }
+function isIOSdev(){ return /iphone|ipad|ipod/i.test(navigator.userAgent||''); }
+function updateInstallUI(){
+  const sec=document.getElementById('installSection'); const btn=document.getElementById('installBtn'); const hint=document.getElementById('installHint');
+  if(!sec) return;
+  if(isStandalone()){ sec.classList.add('hidden'); return; }
+  sec.classList.remove('hidden');
+  if(deferredPrompt){
+    btn.classList.remove('hidden'); hint.textContent='Legt die App als eigenes Symbol auf den Startbildschirm.';
+  } else if(isIOSdev()){
+    btn.classList.add('hidden'); hint.innerHTML='iPhone/iPad: unten auf <b>Teilen</b> tippen → <b>„Zum Home-Bildschirm"</b>.';
+  } else {
+    btn.classList.add('hidden'); hint.innerHTML='Android/Samsung: im Browser-Menü (⋮) <b>„App installieren"</b> bzw. <b>„Zur Startseite hinzufügen"</b> wählen.';
+  }
+}
+async function doInstall(){
+  if(!deferredPrompt){ showToast('Bitte über das Browser-Menü installieren'); setTimeout(hideToast,2400); return; }
+  const dp=deferredPrompt; deferredPrompt=null;
+  dp.prompt();
+  try{ await dp.userChoice; }catch(_){}
+  updateInstallUI();
+}
 function fmtBytes(b){
   if(b==null||isNaN(b)) return '–';
   if(b>=1073741824) return (b/1073741824).toFixed(2).replace('.',',')+' GB';
@@ -1316,7 +1349,7 @@ async function updateStorageInfo(){
     info.innerHTML=`${counts}<br>Der genaue freie Speicher lässt sich auf diesem Gerät nicht abfragen. iOS gibt der App üblicherweise einen Anteil des freien iPhone-Speichers (meist mehrere GB).`;
   }
 }
-function openSheet(){ document.getElementById('sheet').classList.add('show'); document.getElementById('scrim').classList.add('show'); updateStorageInfo(); }
+function openSheet(){ document.getElementById('sheet').classList.add('show'); document.getElementById('scrim').classList.add('show'); updateStorageInfo(); updateInstallUI(); }
 function closeSheet(){ document.getElementById('sheet').classList.remove('show'); document.getElementById('scrim').classList.remove('show'); }
 document.getElementById('settingsBtn').addEventListener('click',openSheet);
 document.getElementById('scrim').addEventListener('click',()=>{ closeSheet(); closeSidebar(); });
@@ -1327,6 +1360,7 @@ document.getElementById('sheet').addEventListener('click',e=>{
   if(act==='import') document.getElementById('importInput').click();
   if(act==='password') openPwModal();
   if(act==='lock') lockNow();
+  if(act==='install') doInstall();
 });
 
 /* ============ Sidebar mobil ============ */

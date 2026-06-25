@@ -70,6 +70,26 @@ damit der Service Worker alles für offline ablegt.
 
 ---
 
+## 🤖 Auf Android / Samsung installieren
+
+Funktioniert genauso – Android/Chrome unterstützt PWAs sogar nativ (echtes
+App-Symbol/WebAPK):
+
+1. Pages-URL in **Chrome** oder **Samsung Internet** öffnen.
+2. Entweder erscheint automatisch ein Hinweis **„App installieren"**, oder:
+   - **Chrome:** Menü **⋮** → **„App installieren"** bzw. **„Zur Startseite
+     hinzufügen"**.
+   - **Samsung Internet:** Menü → **„Seite hinzufügen zu"** →
+     **„Startbildschirm"**.
+3. Bestätigen – die App liegt mit eigenem Icon auf dem Startbildschirm und
+   startet im Vollbild (eigenständig, getrennt vom Browser), inkl. Offline-Betrieb.
+
+Komfort: In der App **Menü → „App installieren"** öffnet auf Android direkt den
+Installations-Dialog. (Auf dem iPhone gibt es diesen Knopf nicht – dort der
+Weg über **Teilen → „Zum Home-Bildschirm"**.)
+
+---
+
 ## 🗂 Daten & Backup
 
 - Alle Projekte und Fotos liegen **ausschließlich lokal** auf dem Gerät
