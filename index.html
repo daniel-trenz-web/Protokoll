@@ -407,6 +407,8 @@ input,textarea{font-family:inherit;font-size:16px}
   <h3>Daten &amp; Sicherung</h3>
   <button data-act="export">Backup exportieren (JSON)</button>
   <button data-act="import">Backup importieren</button>
+  <button data-act="overview">Projektübersicht (PDF, ohne Bilder)</button>
+  <button data-act="zip">Alle Projekte + Bilder (ZIP)</button>
   <div class="sep"></div>
   <h3>Sicherheit</h3>
   <button data-act="password">Passwort ändern</button>
@@ -1265,6 +1267,160 @@ async function sharePdf(doc, p){
   showToast('PDF gespeichert'); setTimeout(hideToast,1600);
 }
 
+/* ============ Export: ZIP (alle Projekte + Bilder) & Projektübersicht (PDF) ============ */
+async function shareOrDownload(blob, fname, type){
+  const file=new File([blob],fname,{type:type||blob.type||'application/octet-stream'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:fname}); return; }
+    catch(err){ if(err && err.name==='AbortError') return; }
+  }
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=fname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+
+/* --- Minimaler ZIP-Writer (Methode STORE; JPEGs sind bereits komprimiert) --- */
+const ZIP_CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(bytes){ let c=0xFFFFFFFF; for(let i=0;i<bytes.length;i++) c=ZIP_CRC[(c^bytes[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function dataURLtoBytes(d){ const i=d.indexOf(','); const bin=atob(d.slice(i+1)); const a=new Uint8Array(bin.length); for(let j=0;j<bin.length;j++) a[j]=bin.charCodeAt(j); return a; }
+function zipName(s){ return String(s||'').replace(/[\x00-\x1f\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').replace(/[. ]+$/,'').trim()||'unbenannt'; }
+function makeZip(files){
+  const enc=new TextEncoder(); const out=[]; const central=[]; let offset=0;
+  const u16=n=>[n&255,(n>>8)&255]; const u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];
+  const DATE=0x21, TIME=0; // 1980-01-01
+  for(const f of files){
+    const nm=enc.encode(f.name); const crc=crc32(f.data); const sz=f.data.length;
+    const lfh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(TIME),u16(DATE),u32(crc),u32(sz),u32(sz),u16(nm.length),u16(0));
+    out.push(new Uint8Array(lfh),nm,f.data);
+    central.push({nm,crc,sz,offset});
+    offset+=lfh.length+nm.length+sz;
+  }
+  const cdStart=offset; let cdSize=0; const cd=[];
+  for(const c of central){
+    const h=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(TIME),u16(DATE),u32(c.crc),u32(c.sz),u32(c.sz),u16(c.nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.offset));
+    const a=new Uint8Array(h.length+c.nm.length); a.set(h,0); a.set(c.nm,h.length);
+    cd.push(a); cdSize+=a.length;
+  }
+  const eocd=[].concat(u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(cdStart),u16(0));
+  return new Blob([...out,...cd,new Uint8Array(eocd)],{type:'application/zip'});
+}
+function prioSlug(s){ return ({ok:'Prio-gruen', todo:'Prio-gelb', bad:'Prio-rot'})[s.tone]||'Prio'; }
+function projectTextSummary(p){
+  const L=[];
+  L.push('OBJEKT: '+(p.name||'–'));
+  L.push('Mieteinheit: '+(p.wohnungsnr||'–'));
+  const addr=[p.strasse,p.plzort].filter(Boolean).join(', '); if(addr) L.push('Adresse: '+addr);
+  L.push('Etage/Lage: '+(p.etage||'–'));
+  L.push('Datum: '+(fmtDate(p.datum)||'–')+'   Bearbeiter: '+(p.bearbeiter||'–'));
+  if(p.notiz&&p.notiz.trim()){ L.push(''); L.push('Notizen: '+p.notiz.trim()); }
+  GEWERKE.forEach(w=>{
+    if(!gewerkHasContent(p,w.key)&&!gewerkCost(p,w.key)) return;
+    L.push(''); L.push('=== '+w.label+' ===');
+    SECTIONS.forEach(s=>{
+      const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||((e.photos||[]).length)||Number(e.cost)>0);
+      if(!entries.length) return;
+      L.push('-- '+s.label+' --');
+      entries.forEach(e=>{
+        const cost=Number(e.cost)||0; const ph=(e.photos||[]).length;
+        let line='  - '+(e.text&&e.text.trim()?e.text.trim():'(ohne Text)');
+        if(cost>0) line+='  ['+fmtEUR(cost)+']';
+        if(ph) line+='  ('+ph+' Foto'+(ph>1?'s':'')+')';
+        L.push(line);
+      });
+    });
+    const gc=gewerkCost(p,w.key); if(gc>0) L.push('  Zwischensumme '+w.label+': '+fmtEUR(gc));
+  });
+  L.push(''); L.push('GESAMTSUMME (Schätzung): '+fmtEUR(projectCost(p)));
+  return L.join('\r\n');
+}
+function pad2(n){ return (n<10?'0':'')+n; }
+function buildZipFiles(){
+  const enc=new TextEncoder(); const files=[];
+  files.push({name:'_backup.json', data:enc.encode(JSON.stringify({app:'wohnungsprotokoll',version:1,exported:new Date().toISOString(),projects:state.projects}))});
+  state.projects.forEach((p,pi)=>{
+    const folder=zipName(p.name||('Projekt '+(pi+1)))+'/';
+    files.push({name:folder+'Protokoll.txt', data:enc.encode(projectTextSummary(p))});
+    let n=0;
+    GEWERKE.forEach(w=>SECTIONS.forEach(s=>{
+      (p.gewerke[w.key][s.key]||[]).forEach(e=>{
+        (e.photos||[]).forEach(ph=>{
+          n++;
+          const cap=(ph.caption||e.text||'').trim();
+          let base=pad2(n)+'_'+w.label+'_'+prioSlug(s); if(cap) base+='_'+cap;
+          files.push({name:folder+zipName(base).slice(0,90)+'.jpg', data:dataURLtoBytes(ph.data)});
+        });
+      });
+    }));
+  });
+  return files;
+}
+async function exportZip(){
+  showToast('ZIP wird erstellt…');
+  try{
+    const blob=makeZip(buildZipFiles());
+    hideToast();
+    await shareOrDownload(blob, 'Wohnungsprotokoll_alle_Projekte_'+todayISO()+'.zip', 'application/zip');
+    showToast('ZIP erstellt'); setTimeout(hideToast,1500);
+  }catch(e){ console.error('ZIP-Fehler',e); showToast('ZIP konnte nicht erstellt werden'); setTimeout(hideToast,2600); }
+}
+
+async function exportOverviewPdf(){
+  if(!(window.jspdf&&window.jspdf.jsPDF)){ showToast('PDF-Bibliothek nicht geladen'); setTimeout(hideToast,2400); return; }
+  showToast('Übersicht wird erstellt…');
+  try{
+    const blob=buildOverviewDoc().output('blob');
+    hideToast();
+    await shareOrDownload(blob, 'Projektuebersicht_'+todayISO()+'.pdf', 'application/pdf');
+    showToast('Übersicht erstellt'); setTimeout(hideToast,1500);
+  }catch(e){ console.error('Übersicht-Fehler',e); showToast('PDF konnte nicht erstellt werden'); setTimeout(hideToast,2600); }
+}
+function buildOverviewDoc(){
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+  const W=210,mL=15,mR=15,contentW=W-mL-mR,pageH=297,mT=16,bottom=pageH-16;
+  let y=mT;
+  const ink=hexRGB('#16202e'),muted=hexRGB('#62718a'),muted2=hexRGB('#8b97a8');
+  const setFill=c=>doc.setFillColor(c[0],c[1],c[2]); const setText=c=>doc.setTextColor(c[0],c[1],c[2]); const setDraw=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  const cObj=mL, cME=mL+82, cDate=mL+100, cP=[mL+contentW-55, mL+contentW-41, mL+contentW-27], cCost=mL+contentW;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); setText(muted); doc.text('WOHNUNGSPROTOKOLL', mL, y, {charSpace:0.8});
+  doc.setFontSize(20); setText(ink); doc.text('Projektübersicht', mL, y+9);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); setText(muted2); doc.text(fmtDate(todayISO())+'  ·  '+state.projects.length+' Objekte', W-mR, y+8.5, {align:'right'});
+  y+=14; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=7;
+  function header(){
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); setText(muted2);
+    doc.text('OBJEKT', cObj, y); doc.text('ME', cME, y); doc.text('DATUM', cDate, y);
+    SECTIONS.forEach((s,i)=>{ setFill(hexRGB(s.color)); doc.circle(cP[i]-1, y-1, 1.3,'F'); });
+    doc.text('KOSTEN', cCost, y, {align:'right'});
+    y+=2; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=4.5;
+  }
+  header();
+  const sorted=[...state.projects].sort((a,b)=>b.updatedAt-a.updatedAt);
+  let grand=0;
+  sorted.forEach(p=>{
+    const addr=[p.strasse,p.plzort].filter(Boolean).join(', ');
+    if(y+(addr?7.5:5)>bottom){ doc.addPage(); y=mT; header(); }
+    const tot={}; GEWERKE.forEach(w=>{ const c=gewerkCounts(p,w.key); SECTIONS.forEach(s=>{ tot[s.key]=(tot[s.key]||0)+c[s.key]; }); });
+    const cost=projectCost(p); grand+=cost;
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setText(ink);
+    doc.text(doc.splitTextToSize(p.name||'(ohne Bezeichnung)', cME-cObj-3)[0], cObj, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); setText(hexRGB('#243246'));
+    doc.text(doc.splitTextToSize(p.wohnungsnr||'–', cDate-cME-2)[0], cME, y);
+    doc.text(fmtDate(p.datum)||'–', cDate, y);
+    SECTIONS.forEach((s,i)=>{ const v=tot[s.key]; doc.setFont('helvetica','bold'); doc.setFontSize(9); setText(v?ink:hexRGB('#cfd6df')); doc.text(String(v||'–'), cP[i], y, {align:'right'}); });
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); setText(ink); doc.text(cost?fmtEUR(cost):'–', cCost, y, {align:'right'});
+    if(addr){ y+=3.6; doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setText(muted2); doc.text(doc.splitTextToSize(addr, contentW-60)[0], cObj, y); }
+    y+=2.4; setDraw(hexRGB('#f0f2f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=4;
+  });
+  if(y+14>bottom){ doc.addPage(); y=mT; }
+  y+=2; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); setText(ink);
+  doc.text('Gesamtsumme aller Objekte (Schätzung)', mL, y); doc.text(fmtEUR(grand), cCost, y, {align:'right'});
+  const n=doc.getNumberOfPages();
+  for(let i=1;i<=n;i++){ doc.setPage(i); setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,pageH-12,W-mR,pageH-12); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setText(muted2); doc.text('Projektübersicht · '+fmtDate(todayISO()), mL, pageH-8.5); doc.text('Seite '+i+' von '+n, W-mR, pageH-8.5, {align:'right'}); }
+  return doc;
+}
+
 /* ============ Backup Export / Import ============ */
 function exportData(){
   const blob=new Blob([JSON.stringify({app:'wohnungsprotokoll',version:1,exported:new Date().toISOString(),projects:state.projects},null,0)],{type:'application/json'});
@@ -1358,6 +1514,8 @@ document.getElementById('sheet').addEventListener('click',e=>{
   const act=b.dataset.act; closeSheet();
   if(act==='export') exportData();
   if(act==='import') document.getElementById('importInput').click();
+  if(act==='overview') exportOverviewPdf();
+  if(act==='zip') exportZip();
   if(act==='password') openPwModal();
   if(act==='lock') lockNow();
   if(act==='install') doInstall();
