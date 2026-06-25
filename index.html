@@ -468,9 +468,9 @@ const GEWERKE = [
   {key:'reinigung', label:'Reinigung', color:'#1e3a5f'},
 ];
 const SECTIONS = [
-  {key:'ausgefuehrt', label:'Arbeiten augenscheinlich ausgeführt',   short:'Ausgeführt', tone:'ok',   color:'#1e3a5f', mark:''},
-  {key:'maengel',     label:'Mängel vorhanden',                       short:'Mängel',     tone:'bad',  color:'#1e3a5f', mark:''},
-  {key:'offen',       label:'Arbeiten müssen noch ausgeführt werden', short:'Offen',      tone:'todo', color:'#1e3a5f', mark:''},
+  {key:'ausgefuehrt', label:'Prio 🟢', labelPdf:'Prio (grün)', short:'Prio 🟢', tone:'ok',   color:'#16a34a', mark:''},
+  {key:'offen',       label:'Prio 🟡', labelPdf:'Prio (gelb)', short:'Prio 🟡', tone:'todo', color:'#eab308', mark:''},
+  {key:'maengel',     label:'Prio 🛑', labelPdf:'Prio (rot)',  short:'Prio 🛑', tone:'bad',  color:'#dc2626', mark:''},
 ];
 
 /* ============ IndexedDB ============ */
@@ -633,12 +633,12 @@ function renderSidebar(){
     let maengel=0, offen=0;
     GEWERKE.forEach(w=>{ const c=gewerkCounts(p,w.key); maengel+=c.maengel; offen+=c.offen; });
     const flags=[];
-    if(maengel) flags.push(`<span class="flag bad">${maengel} Mängel</span>`);
-    if(offen) flags.push(`<span class="flag todo">${offen} offen</span>`);
+    if(maengel) flags.push(`<span class="flag bad">${maengel} 🛑</span>`);
+    if(offen) flags.push(`<span class="flag todo">${offen} 🟡</span>`);
     if(!maengel && !offen) flags.push(`<span class="flag ok">o. B.</span>`);
     return `<div class="proj-item ${p.id===state.currentId?'active':''}" data-id="${p.id}">
       <div class="pi-name">${esc(p.name)||'<span style="color:var(--line-2)">Ohne Bezeichnung</span>'}</div>
-      <div class="pi-meta">${esc(p.wohnungsnr?('Whg. '+p.wohnungsnr+' · '):'')}${fmtDate(p.datum)}</div>
+      <div class="pi-meta">${esc(p.wohnungsnr?('ME '+p.wohnungsnr+' · '):'')}${fmtDate(p.datum)}</div>
       <div class="pi-flags">${flags.join('')}</div>
     </div>`;
   }).join('');
@@ -654,7 +654,7 @@ function renderContent(){
   if(!p){
     c.innerHTML=`<div class="empty">
       <h1>Wohnung anlegen</h1>
-      <p>Lege ein Projekt für eine Wohnung an. Pro Gewerk dokumentierst du ausgeführte Arbeiten, Mängel und offene Punkte – mit Fotos und Schätzkosten direkt am Stichpunkt. Am Ende erzeugst du ein A4-PDF mit Kostenaufstellung.</p>
+      <p>Lege ein Projekt für eine Wohnung an. Pro Gewerk sortierst du deine Punkte nach Priorität (🟢 🟡 🛑) – mit Fotos und Schätzkosten direkt am Stichpunkt. Am Ende erzeugst du ein A4-PDF mit Kostenaufstellung.</p>
       <button id="emptyNew">Neues Projekt</button>
     </div>`;
     document.getElementById('emptyNew').addEventListener('click',createProject);
@@ -685,11 +685,11 @@ function renderHeader(){
   const h=document.getElementById('projHeader');
   h.innerHTML=`
     <div class="ph-eyebrow">Objekt</div>
-    <input class="ph-title" id="f-name" placeholder="Objektbezeichnung – z. B. Müllerstraße 12, Whg. 4" value="${esc(p.name)}">
+    <input class="ph-title" id="f-name" placeholder="Objektbezeichnung – z. B. Müllerstraße 12, ME 4" value="${esc(p.name)}">
     <div class="ph-grid">
       <div class="field full"><label>Straße &amp; Hausnummer</label><input id="f-strasse" value="${esc(p.strasse)}" placeholder="Straße 12"></div>
       <div class="field"><label>PLZ &amp; Ort</label><input id="f-plzort" value="${esc(p.plzort)}" placeholder="80331 München"></div>
-      <div class="field"><label>Wohnungs-Nr.</label><input id="f-wohnungsnr" value="${esc(p.wohnungsnr)}" placeholder="z. B. 04"></div>
+      <div class="field"><label>Mieteinheit</label><input id="f-wohnungsnr" value="${esc(p.wohnungsnr)}" placeholder="z. B. 4"></div>
       <div class="field"><label>Etage / Lage</label><input id="f-etage" value="${esc(p.etage)}" placeholder="z. B. 2. OG links"></div>
       <div class="field"><label>Datum</label><input id="f-datum" type="date" value="${esc(p.datum)}"></div>
       <div class="field"><label>Bearbeiter</label><input id="f-bearbeiter" value="${esc(p.bearbeiter)}" placeholder="Name"></div>
@@ -943,9 +943,8 @@ function buildPrint(p){
     ];
     const ovRows=GEWERKE.map(w=>{
       const c=gewerkCounts(p,w.key);
-      const pill=(n,cls)=>`<span class="zf-pill ${n?cls:'zero'}">${n||'–'}</span>`;
-      return `<tr><td><span class="zf-dot" style="background:${w.color}"></span>${esc(w.label)}</td>
-        <td class="num">${pill(c.ausgefuehrt,'ok')}</td><td class="num">${pill(c.maengel,'bad')}</td><td class="num">${pill(c.offen,'todo')}</td></tr>`;
+      const cells=SECTIONS.map(s=>`<td class="num"><span class="zf-pill ${c[s.key]?s.tone:'zero'}">${c[s.key]||'–'}</span></td>`).join('');
+      return `<tr><td><span class="zf-dot" style="background:${w.color}"></span>${esc(w.label)}</td>${cells}</tr>`;
     }).join('');
     const costGewerke=GEWERKE.filter(w=>gewerkHasContent(p,w.key)||gewerkCost(p,w.key)>0);
     const costRows=costGewerke.map(w=>`<tr><td>${esc(w.label)}</td><td class="val">${esc(fmtEUR(gewerkCost(p,w.key)))}</td></tr>`).join('');
@@ -956,7 +955,7 @@ function buildPrint(p){
       <div class="c-rule"></div>
       <div class="zf-meta">${meta.map(m=>`<div class="m-row"><div class="m-lab">${esc(m[0])}</div><div class="m-val">${esc(m[1])}</div></div>`).join('')}</div>
       <div class="zf-ov"><h2>Übersicht der Gewerke</h2>
-        <table class="zf-ovt"><thead><tr><th>Gewerk</th><th class="num">Ausgeführt</th><th class="num">Mängel</th><th class="num">Offen</th></tr></thead>
+        <table class="zf-ovt"><thead><tr><th>Gewerk</th>${SECTIONS.map(s=>`<th class="num">${esc(s.label)}</th>`).join('')}</tr></thead>
         <tbody>${ovRows}</tbody></table></div>
       ${costGewerke.length?`<div class="zf-cost"><h2>Kostenübersicht (Schätzung)</h2>
         <table>${costRows}<tr class="total"><td>Gesamtsumme</td><td class="val">${esc(fmtEUR(projectCost(p)))}</td></tr></table></div>`:''}
@@ -966,11 +965,11 @@ function buildPrint(p){
   /* ---------- Block-Bausteine ---------- */
   const buildGHead=w=>mk('div','zf-ghead',
     `<span class="g-bar" style="background:${w.color}"></span><span class="g-name">${esc(w.label)}</span>
-     <span class="g-obj">${esc(p.name||'')}${p.wohnungsnr?' · Whg. '+esc(p.wohnungsnr):''}</span>`);
+     <span class="g-obj">${esc(p.name||'')}${p.wohnungsnr?' · ME '+esc(p.wohnungsnr):''}</span>`);
   const buildGCont=w=>mk('div','zf-gcont',
     `<span class="g-bar" style="background:${w.color}"></span><span class="g-name">${esc(w.label)}</span><span class="g-cont">Fortsetzung</span>`);
   const buildSHead=s=>mk('div','zf-shead',
-    `<span class="s-tag" style="background:${s.color}"></span><span class="s-title" style="color:${s.color}">${esc(s.label)}</span>`);
+    `<span class="s-tag" style="background:${s.color}"></span><span class="s-title" style="color:#16202e">${esc(s.label)}</span>`);
   const buildItem=(s,e)=>{
     const cost=Number(e.cost)||0;
     return mk('div','zf-item',
@@ -1031,7 +1030,7 @@ function buildPrint(p){
 
   const prev=document.title;
   const safe=(p.name||'Zustandsfeststellung').replace(/[^\wäöüÄÖÜß \-]/g,'').trim()||'Zustandsfeststellung';
-  document.title=`Zustandsfeststellung – ${safe}${p.wohnungsnr?' Whg '+p.wohnungsnr:''}`;
+  document.title=`Zustandsfeststellung – ${safe}${p.wohnungsnr?' ME '+p.wohnungsnr:''}`;
   setTimeout(()=>{ window.print(); setTimeout(()=>{document.title=prev;},600); }, 90);
 }
 
@@ -1115,7 +1114,7 @@ async function buildPdfDoc(p){
   if(addr){ doc.setFont('helvetica','normal'); doc.setFontSize(12); setText(hexRGB('#243246')); doc.text(addr, mL, y); y+=6; }
   y+=2; setDraw(ink); doc.setLineWidth(0.8); doc.line(mL,y,W-mR,y); y+=11;
 
-  const meta=[['Objekt',p.name||'–'],['Wohnungs-Nr.',p.wohnungsnr||'–'],['Etage / Lage',p.etage||'–'],['Datum',fmtDate(p.datum)||'–'],['Bearbeiter',p.bearbeiter||'–']];
+  const meta=[['Objekt',p.name||'–'],['Mieteinheit',p.wohnungsnr||'–'],['Etage / Lage',p.etage||'–'],['Datum',fmtDate(p.datum)||'–'],['Bearbeiter',p.bearbeiter||'–']];
   const colW=contentW/2;
   for(let i=0;i<meta.length;i+=2){
     const rowY=y;
@@ -1137,19 +1136,14 @@ async function buildPdfDoc(p){
   setDraw(ink); doc.setLineWidth(0.4); doc.line(mL,y+2,W-mR,y+2); y+=7;
   const cN=[ mL+contentW-74, mL+contentW-44, mL+contentW-16 ];
   doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setText(muted2);
-  doc.text('GEWERK', mL, y);
-  doc.text('AUSGEFÜHRT', cN[0], y, {align:'right'});
-  doc.text('MÄNGEL', cN[1], y, {align:'right'});
-  doc.text('OFFEN', cN[2], y, {align:'right'});
+  doc.text('GEWERK   ·   ANZAHL JE PRIORITÄT', mL, y);
+  SECTIONS.forEach((s,idx)=>{ setFill(hexRGB(s.color)); doc.circle(cN[idx]-1.2, y-1.1, 1.6, 'F'); });
   y+=2; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=5;
   GEWERKE.forEach(w=>{
     const cc=gewerkCounts(p,w.key);
     setFill(hexRGB(w.color)); doc.circle(mL+1.6, y-1.1, 1.4, 'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setText(ink); doc.text(w.label, mL+5, y);
-    const num=(val,col)=>{ doc.setFont('helvetica','bold'); doc.setFontSize(10.5); setText(val?hexRGB(col):hexRGB('#cfd6df')); };
-    num(cc.ausgefuehrt,'#16202e'); doc.text(String(cc.ausgefuehrt||'–'), cN[0], y, {align:'right'});
-    num(cc.maengel,'#16202e');    doc.text(String(cc.maengel||'–'),    cN[1], y, {align:'right'});
-    num(cc.offen,'#16202e');      doc.text(String(cc.offen||'–'),      cN[2], y, {align:'right'});
+    SECTIONS.forEach((s,idx)=>{ const v=cc[s.key]; doc.setFont('helvetica','bold'); doc.setFontSize(10.5); setText(v?ink:hexRGB('#cfd6df')); doc.text(String(v||'–'), cN[idx], y, {align:'right'}); });
     y+=3; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=5;
   });
   if(p.notiz && p.notiz.trim()){
@@ -1165,7 +1159,7 @@ async function buildPdfDoc(p){
     curGewerk=w; doc.addPage(); y=mT;
     setFill(hexRGB(w.color)); doc.roundedRect(mL, y, 6, 6, 1, 1, 'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(17); setText(ink); doc.text(w.label, mL+9, y+5);
-    const objLine=(p.name||'')+(p.wohnungsnr?'  ·  Whg. '+p.wohnungsnr:'');
+    const objLine=(p.name||'')+(p.wohnungsnr?'  ·  ME '+p.wohnungsnr:'');
     if(objLine.trim()){ doc.setFont('helvetica','normal'); doc.setFontSize(8); setText(muted2); doc.text(objLine, W-mR, y+4.5, {align:'right'}); }
     y+=9; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=7;
 
@@ -1173,9 +1167,9 @@ async function buildPdfDoc(p){
       const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||((e.photos||[]).length)||(Number(e.cost)>0));
       if(!entries.length) continue;
       need(16,true);
-      setFill(hexRGB(s.color)); doc.rect(mL, y-3.2, 3.6, 3.6, 'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(10); setText(hexRGB(s.color));
-      doc.text(s.label.toUpperCase(), mL+6, y); y+=6;
+      setFill(hexRGB(s.color)); doc.circle(mL+1.8, y-1.3, 1.8, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); setText(ink);
+      doc.text((s.labelPdf||s.label).toUpperCase(), mL+6, y); y+=6;
       for(const e of entries){
         const cost=Number(e.cost)||0;
         const photos=e.photos||[];
@@ -1248,7 +1242,7 @@ async function buildPdfDoc(p){
 
 async function sharePdf(doc, p){
   const safe=(p.name||'Zustandsfeststellung').replace(/[^\wäöüÄÖÜß \-]/g,'').trim()||'Zustandsfeststellung';
-  const fname=('Zustandsfeststellung_'+safe+(p.wohnungsnr?'_Whg'+p.wohnungsnr:'')+'.pdf').replace(/\s+/g,'_');
+  const fname=('Zustandsfeststellung_'+safe+(p.wohnungsnr?'_ME'+p.wohnungsnr:'')+'.pdf').replace(/\s+/g,'_');
   const blob=doc.output('blob');
   const file=new File([blob],fname,{type:'application/pdf'});
   hideToast();
