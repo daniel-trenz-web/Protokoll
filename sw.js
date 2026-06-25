@@ -3,7 +3,7 @@
    - Navigation: network-first (frische Version online), Fallback auf Cache (offline)
    - Assets: cache-first (schnell), mit Netzwerk-Nachladen
    Bei Änderungen am App-Code VERSION erhöhen -> alter Cache wird ersetzt. */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = 'protokoll-' + VERSION;
 
 const ASSETS = [

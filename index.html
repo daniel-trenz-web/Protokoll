@@ -1426,6 +1426,44 @@ document.getElementById('pwSave').addEventListener('click',savePw);
 document.getElementById('pwModal').addEventListener('click',e=>{ if(e.target.id==='pwModal') closePwModal(); });
 document.getElementById('pwNew2').addEventListener('keydown',e=>{ if(e.key==='Enter') savePw(); });
 
+/* ============ Standard-Objekte (einmalig anlegen, ohne Inhalt) ============ */
+const SEED_KEY='seeded_objekte_v1';
+const DEFAULT_OBJEKTE=[
+  'Nymphenburgerstraße, München',
+  'Trautmannstraße 11, 81373 München',
+  'Tal 30, 80331 München',
+  'Bachbauernstraße 2 A, 81241 München',
+  'Bodenseestr. 4 A, 81241 München',
+  'Siegfriedstr. 11, 80803 München',
+  'Theresienstraße 22, 80333 München',
+  'Reinachstraße 55, 80995 München',
+  'Dahlienstraße 1, 80935 München',
+  'Heimgartenstr. 10, 85540 Haar/Gronsdorf',
+  'Herzogstandstr. 11, 85540 Haar/Gronsdorf',
+  'Bürgermeister-Schuster-Str. 8, 85551 Kirchheim',
+  'Heimstettner Straße 7, 85551 Kirchheim'
+];
+// Legt die Standard-Objekte genau einmal an (per Meta-Flag). Bereits vorhandene
+// Namen werden übersprungen, damit nichts doppelt entsteht.
+async function seedDefaults(){
+  let done=false;
+  try{ done=await DB.getMeta(SEED_KEY); }catch(_){}
+  if(done) return;
+  const existing=new Set(state.projects.map(p=>(p.name||'').trim().toLowerCase()));
+  const base=Date.now();
+  let i=0;
+  for(const addr of DEFAULT_OBJEKTE){
+    const key=addr.trim().toLowerCase();
+    if(!existing.has(key)){
+      const p=newProject(); p.name=addr; p.createdAt=p.updatedAt=base-i*1000;   // Reihenfolge wie eingegeben
+      state.projects.push(p); existing.add(key);
+      try{ await DB.put(p); }catch(_){}
+    }
+    i++;
+  }
+  try{ await DB.setMeta(SEED_KEY,true); }catch(_){}
+}
+
 /* ============ Init ============ */
 // Dauerhaften Speicher anfordern, damit iOS/Safari die lokal abgelegten
 // Projekte und Fotos nicht nach einigen Tagen automatisch löscht.
@@ -1444,6 +1482,7 @@ async function init(){
     await DB.open();
     const all=await DB.getAll();
     state.projects=all.map(ensureShape);
+    await seedDefaults();
     if(state.projects.length){ state.currentId=[...state.projects].sort((a,b)=>b.updatedAt-a.updatedAt)[0].id; }
   }catch(e){
     console.error('DB-Fehler',e);
