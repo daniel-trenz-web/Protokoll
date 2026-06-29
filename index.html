@@ -408,6 +408,7 @@ input,textarea{font-family:inherit;font-size:16px}
   <button data-act="export">Backup exportieren (JSON)</button>
   <button data-act="import">Backup importieren</button>
   <button data-act="overview">Projektübersicht (PDF, ohne Bilder)</button>
+  <button data-act="gewerke">Gewerk-Listen (PDF, je Gewerk eine Seite)</button>
   <button data-act="zip">Alle Projekte + Bilder (ZIP)</button>
   <div class="sep"></div>
   <h3>Sicherheit</h3>
@@ -1427,6 +1428,73 @@ function buildOverviewDoc(){
   return doc;
 }
 
+/* ============ Export: Gewerk-Listen (je Gewerk eine Seite, Wohnungen darunter) ============ */
+async function exportGewerkePdf(){
+  if(!(window.jspdf&&window.jspdf.jsPDF)){ showToast('PDF-Bibliothek nicht geladen'); setTimeout(hideToast,2400); return; }
+  showToast('Gewerk-Listen werden erstellt…');
+  try{
+    const blob=buildGewerkeDoc().output('blob');
+    hideToast();
+    await shareOrDownload(blob, 'Gewerk-Listen_'+todayISO()+'.pdf', 'application/pdf');
+    showToast('Gewerk-Listen erstellt'); setTimeout(hideToast,1500);
+  }catch(e){ console.error('Gewerke-PDF-Fehler',e); showToast('PDF konnte nicht erstellt werden'); setTimeout(hideToast,2600); }
+}
+function buildGewerkeDoc(){
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4',compress:true});
+  const W=210,mL=15,mR=15,contentW=W-mL-mR,pageH=297,mT=16,bottom=pageH-16;
+  let y=mT, curG=null;
+  const ink=hexRGB('#16202e'),muted2=hexRGB('#8b97a8');
+  const setFill=c=>doc.setFillColor(c[0],c[1],c[2]); const setText=c=>doc.setTextColor(c[0],c[1],c[2]); const setDraw=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  const lh=pt=>pt*0.3528*1.32;
+  const projs=[...state.projects].sort((a,b)=>b.updatedAt-a.updatedAt);
+  const hasIn=(p,gkey)=>SECTIONS.some(s=>(p.gewerke[gkey][s.key]||[]).some(e=>(e.text&&e.text.trim())||Number(e.cost)>0||(e.photos||[]).length));
+
+  function gewerkHeader(w, cont){
+    setFill(hexRGB(w.color)); doc.roundedRect(mL, y, 6, 6, 1, 1, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(17); setText(ink); doc.text(w.label, mL+9, y+5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setText(muted2); doc.text(cont?'Fortsetzung':'Alle Wohnungen', W-mR, y+4.5, {align:'right'});
+    y+=9; setDraw(ink); doc.setLineWidth(0.7); doc.line(mL,y,W-mR,y); y+=7;
+  }
+  function need(h){ if(y+h>bottom){ doc.addPage(); y=mT; if(curG) gewerkHeader(curG, true); } }
+
+  let first=true;
+  GEWERKE.forEach(w=>{
+    const relevant=projs.filter(p=>hasIn(p,w.key));
+    if(!relevant.length) return;
+    curG=w;
+    if(!first) doc.addPage();
+    y=mT; first=false;
+    gewerkHeader(w, false);
+    relevant.forEach(p=>{
+      need(12);
+      doc.setFont('helvetica','bold'); doc.setFontSize(11); setText(ink);
+      const title=(p.name||'(ohne Bezeichnung)')+(p.wohnungsnr?'   ·   ME '+p.wohnungsnr:'');
+      doc.text(doc.splitTextToSize(title, contentW)[0], mL, y); y+=5.5;
+      SECTIONS.forEach(s=>{
+        const entries=(p.gewerke[w.key][s.key]||[]).filter(e=>(e.text&&e.text.trim())||Number(e.cost)>0||(e.photos||[]).length);
+        entries.forEach(e=>{
+          const cost=Number(e.cost)||0;
+          const txt=(e.text&&e.text.trim())?e.text.trim():'(ohne Text)';
+          doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setText(ink);
+          const lines=doc.splitTextToSize(txt, contentW-7-(cost>0?26:0));
+          const blockH=Math.max(lines.length*lh(10.5), 4);
+          need(blockH+1.5);
+          setFill(hexRGB(s.color)); doc.circle(mL+2, y-1.3, 1.3, 'F');
+          doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setText(ink); doc.text(lines, mL+6, y);
+          if(cost>0){ doc.setFont('helvetica','bold'); doc.setFontSize(9.5); setText(ink); doc.text(fmtEUR(cost), W-mR, y, {align:'right'}); }
+          y+=blockH+1.5;
+        });
+      });
+      y+=2.5; setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,y,W-mR,y); y+=4.5;
+    });
+  });
+  if(first){ doc.setFont('helvetica','bold'); doc.setFontSize(12); setText(muted2); doc.text('Keine Einträge vorhanden.', mL, y+4); }
+  const n=doc.getNumberOfPages(), dateStr=fmtDate(todayISO());
+  for(let i=1;i<=n;i++){ doc.setPage(i); setDraw(hexRGB('#eef1f5')); doc.setLineWidth(0.2); doc.line(mL,pageH-12,W-mR,pageH-12); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setText(muted2); doc.text('Gewerk-Listen · '+dateStr, mL, pageH-8.5); doc.text('Seite '+i+' von '+n, W-mR, pageH-8.5, {align:'right'}); }
+  return doc;
+}
+
 /* ============ Backup Export / Import ============ */
 function exportData(){
   const blob=new Blob([JSON.stringify({app:'wohnungsprotokoll',version:1,exported:new Date().toISOString(),projects:state.projects},null,0)],{type:'application/json'});
@@ -1521,6 +1589,7 @@ document.getElementById('sheet').addEventListener('click',e=>{
   if(act==='export') exportData();
   if(act==='import') document.getElementById('importInput').click();
   if(act==='overview') exportOverviewPdf();
+  if(act==='gewerke') exportGewerkePdf();
   if(act==='zip') exportZip();
   if(act==='password') openPwModal();
   if(act==='lock') lockNow();
